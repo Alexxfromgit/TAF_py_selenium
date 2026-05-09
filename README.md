@@ -1,21 +1,67 @@
 # proj_sel
 
-If you try this first install git into your linux
+Selenium-based UI test automation framework for email services, built with Python and the Page Object Model (POM) design pattern.
 
-    sudo apt install git -y
+## What It Tests
 
-Clone repository
+| Test Class | Target | Scenario |
+|---|---|---|
+| `TestALoginPage` | ukr.net | Login with invalid credentials, login with valid credentials |
+| `TestBSendingEmail` | mail.ukr.net | Compose and send an email to a Mailinator inbox |
+| `TestCEmailinatorInbox` | mailinator.com | Verify the received email's sender and subject |
 
-    cd ~
-    cd /tmp/
-    git clone https://github.com/Alexxfromgit/proj_sel.git
+## Prerequisites
 
-For run tests go to the **tests** folder
+- Python 3.6+
+- Google Chrome
+- ChromeDriver matching your Chrome version, placed at `C:/webdrivers/chromedriver.exe`
+- Selenium installed in your environment:
 
-    cd /proj_sel/tests/
+```bash
+pip install selenium
+```
 
-and run **login_test.py** file with:
+## Project Structure
 
-    python -m unittest login_test.py
+```
+proj_sel/
+├── base/
+│   └── selenium_driver.py      # WebDriver factory (Chrome)
+├── pages/
+│   └── Login/
+│       └── login_page.py       # Page Object — login, email, inbox actions
+└── tests/
+    └── login_test.py           # Test suite (3 classes, 5 test methods)
+```
 
+## Running Tests
 
+Run the full suite from the project root:
+
+```bash
+python -m unittest tests/login_test.py
+```
+
+Run a single test class:
+
+```bash
+python -m unittest tests.login_test.TestALoginPage
+```
+
+Run a single test method:
+
+```bash
+python -m unittest tests.login_test.TestALoginPage.test_login_valid
+```
+
+> **Note:** Test classes are prefixed `A`, `B`, `C` to enforce execution order — `TestB` depends on `TestA` having sent the email that `TestC` then verifies.
+
+## Configuration
+
+The ChromeDriver path is hardcoded in `base/selenium_driver.py`. Update it if your driver lives elsewhere:
+
+```python
+driver = webdriver.Chrome('C:/webdrivers/chromedriver.exe')
+```
+
+Test credentials and target addresses are defined in `tests/login_test.py`.
