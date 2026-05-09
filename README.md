@@ -6,32 +6,56 @@ Selenium-based UI test automation framework for email services, built with Pytho
 
 | Test Class | Target | Scenario |
 |---|---|---|
-| `TestALoginPage` | ukr.net | Login with invalid credentials, login with valid credentials |
-| `TestBSendingEmail` | mail.ukr.net | Compose and send an email to a Mailinator inbox |
-| `TestCEmailinatorInbox` | mailinator.com | Verify the received email's sender and subject |
+| `TestLogin` | ukr.net | Login with invalid credentials, login with valid credentials |
+| `TestSendEmail` | mail.ukr.net | Compose and send an email to a Mailinator inbox |
+| `TestMailinatorInbox` | mailinator.com | Verify the received email's sender and subject |
 
 ## Prerequisites
 
 - Python 3.6+
 - Google Chrome
 - ChromeDriver matching your Chrome version, placed at `C:/webdrivers/chromedriver.exe`
-- Selenium installed in your environment:
+
+## Setup
+
+1. Install dependencies:
 
 ```bash
-pip install selenium
+pip install -r requirements.txt
+```
+
+2. Copy `.env.example` to `.env` and fill in your credentials:
+
+```bash
+cp .env.example .env
+```
+
+```
+UKRNET_EMAIL=your_email@ukr.net
+UKRNET_PASSWORD=your_password
 ```
 
 ## Project Structure
 
 ```
 proj_sel/
+├── config/
+│   └── config.py               # URLs, timeouts, chromedriver path
+├── data/
+│   └── test_data.py            # Expected values and env-loaded credentials
 ├── base/
-│   └── selenium_driver.py      # WebDriver factory (Chrome)
+│   ├── driver_factory.py       # WebDriver factory (Chrome)
+│   └── base_page.py            # Shared Selenium helpers
 ├── pages/
-│   └── Login/
-│       └── login_page.py       # Page Object — login, email, inbox actions
+│   ├── ukrnet/
+│   │   ├── home_page.py        # UKR.NET homepage — login & error detection
+│   │   └── mail_page.py        # UKR.NET mail — compose & send
+│   └── mailinator/
+│       └── inbox_page.py       # Mailinator — inbox search & assertions
 └── tests/
-    └── login_test.py           # Test suite (3 classes, 5 test methods)
+    ├── base_test.py            # Base test class with driver lifecycle
+    ├── test_login.py           # Login validation tests
+    └── test_email_flow.py      # Email send + inbox verification
 ```
 
 ## Running Tests
@@ -39,29 +63,28 @@ proj_sel/
 Run the full suite from the project root:
 
 ```bash
-python -m unittest tests/login_test.py
+pytest
 ```
 
-Run a single test class:
+Run a single file:
 
 ```bash
-python -m unittest tests.login_test.TestALoginPage
+pytest tests/test_login.py
+pytest tests/test_email_flow.py
 ```
 
-Run a single test method:
+Run a single test:
 
 ```bash
-python -m unittest tests.login_test.TestALoginPage.test_login_valid
+pytest tests/test_login.py::TestLogin::test_valid_credentials_log_in
 ```
-
-> **Note:** Test classes are prefixed `A`, `B`, `C` to enforce execution order — `TestB` depends on `TestA` having sent the email that `TestC` then verifies.
 
 ## Configuration
 
-The ChromeDriver path is hardcoded in `base/selenium_driver.py`. Update it if your driver lives elsewhere:
+| What | How |
+|---|---|
+| ChromeDriver path | Set `CHROMEDRIVER_PATH` env var, or edit `config/config.py` |
+| Test credentials | Set `UKRNET_EMAIL` and `UKRNET_PASSWORD` in `.env` |
+| Implicit wait | Edit `IMPLICIT_WAIT` in `config/config.py` |
 
-```python
-driver = webdriver.Chrome('C:/webdrivers/chromedriver.exe')
-```
-
-Test credentials and target addresses are defined in `tests/login_test.py`.
+> **Note:** `TestMailinatorInbox` depends on `TestSendEmail` having delivered an email. Run `test_email_flow.py` as a whole, not in isolation.
